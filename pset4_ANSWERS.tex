@@ -408,7 +408,7 @@ Successfully loaded pos2016.csv with encoding utf-8.
 \end{verbatim}
 
 \begin{verbatim}
-C:\Users\clari\AppData\Local\Temp\ipykernel_28804\3845987685.py:23: SettingWithCopyWarning:
+C:\Users\clari\AppData\Local\Temp\ipykernel_9008\3845987685.py:23: SettingWithCopyWarning:
 
 
 A value is trying to be set on a copy of a slice from a DataFrame.
@@ -423,7 +423,7 @@ Error loading pos2018.csv with encoding utf-8: 'utf-8' codec can't decode byte 0
 \end{verbatim}
 
 \begin{verbatim}
-C:\Users\clari\AppData\Local\Temp\ipykernel_28804\3845987685.py:23: SettingWithCopyWarning:
+C:\Users\clari\AppData\Local\Temp\ipykernel_9008\3845987685.py:23: SettingWithCopyWarning:
 
 
 A value is trying to be set on a copy of a slice from a DataFrame.
@@ -438,7 +438,7 @@ Error loading pos2019.csv with encoding utf-8: 'utf-8' codec can't decode byte 0
 \end{verbatim}
 
 \begin{verbatim}
-C:\Users\clari\AppData\Local\Temp\ipykernel_28804\3845987685.py:23: SettingWithCopyWarning:
+C:\Users\clari\AppData\Local\Temp\ipykernel_9008\3845987685.py:23: SettingWithCopyWarning:
 
 
 A value is trying to be set on a copy of a slice from a DataFrame.
@@ -467,7 +467,7 @@ Combined dataset saved as C:/Users/clari/OneDrive/Documents/Python II/pos_files\
 \end{verbatim}
 
 \begin{verbatim}
-C:\Users\clari\AppData\Local\Temp\ipykernel_28804\3845987685.py:23: SettingWithCopyWarning:
+C:\Users\clari\AppData\Local\Temp\ipykernel_9008\3845987685.py:23: SettingWithCopyWarning:
 
 
 A value is trying to be set on a copy of a slice from a DataFrame.
@@ -538,10 +538,8 @@ b.Both plots (total vs. unique hospitals) give the same result. This strongly su
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ pandas }\ImportTok{as}\NormalTok{ pd}
 \ImportTok{import}\NormalTok{ altair }\ImportTok{as}\NormalTok{ alt}
 \NormalTok{alt.renderers.enable(}\StringTok{"png"}\NormalTok{)}
-\ImportTok{import}\NormalTok{ time}
 \ImportTok{from}\NormalTok{ vega\_datasets }\ImportTok{import}\NormalTok{ data }\ImportTok{as}\NormalTok{ vega\_data}
 \ImportTok{import}\NormalTok{ warnings }
 \NormalTok{warnings.filterwarnings(}\StringTok{\textquotesingle{}ignore\textquotesingle{}}\NormalTok{)}
@@ -1555,7 +1553,7 @@ codes, including their centroids and how many hospitals they had in
 9214  78635           19819.708012
 9215  78636               0.000000
 9216  78638           18391.605097
-Time taken for 10 ZIP codes: 0.00 seconds
+Time taken for 10 ZIP codes: 0.01 seconds
 0
 \end{verbatim}
 
@@ -1601,7 +1599,7 @@ codes.
 32921  78586               0.000000
 
 [1935 rows x 2 columns]
-Time taken for full calculation: 0.61 seconds
+Time taken for full calculation: 0.67 seconds
 0
 \end{verbatim}
 
@@ -2052,14 +2050,14 @@ Name: count, dtype: int64
 \subsection{Reflecting on the exercise (10
 pts)}\label{reflecting-on-the-exercise-10-pts}
 
-The method we use to identify closures is in fact imperfect. For cases
-where hospitals rebranded, for example, there isn't actually a merger or
-closure occurring, but the data will suggest that the old name for the
-hosptial closed, essentially marking down a closure when there was just
-a rebranding. Similarly, hospitals may delay in reporting information
-about their active status due to simple human error. Furthermore, there
-are hospitals that may only temporarily be closed, and so adding them to
-the closure list is innaccurate given enough time.
+(Partner 1) The method we use to identify closures is in fact imperfect.
+For cases where hospitals rebranded, for example, there isn't actually a
+merger or closure occurring, but the data will suggest that the old name
+for the hosptial closed, essentially marking down a closure when there
+was just a rebranding. Similarly, hospitals may delay in reporting
+information about their active status due to simple human error.
+Furthermore, there are hospitals that may only temporarily be closed,
+and so adding them to the closure list is innaccurate given enough time.
 
 I think one of the best solutions we can employ is to analyze data over
 a longer period of time for more consistency. We may also consider
@@ -2070,6 +2068,19 @@ times where this is more accurate to flag as a rebrand rather than a
 merger. It may be useful to cross-reference our data with our databases
 that track whether a hospital can rebrand or whether their closure is
 temporary~or~permanent.
+
+(Partner 2) What our zipcode analysis lacks is nuance. While we analyze
+which areas close and how this can affect other areas based on travel
+time, we don't know exactly what kinds of hospitals are closing. Let's
+say a relatively underutilized hospital closes but the most important
+facilites are still open. Let's take another case where one of the most
+visited facilities is the one to close. In our data, this difference
+isn't detected, but in real life, that difference is crucial. In the
+former case, relatively few individuals may be affected. In the latter,
+this may be disastrous for nearby citizens' access to healthcare.
+Perhaps some additional data analysis related to hospital type or
+average patients received can help us further detect how impactful
+closures within zipcodes will be.
 
 
 
