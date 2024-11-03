@@ -176,10 +176,8 @@ plt.show()
 
 ## Identify hospital closures in POS file (15 pts) (*)
 ```{python}
-import pandas as pd
 import altair as alt
 alt.renderers.enable("png")
-import time
 from vega_datasets import data as vega_data
 import warnings 
 warnings.filterwarnings('ignore')
@@ -805,7 +803,7 @@ print(zip_texas_closure_map['Affected_Category'].value_counts())
 ```
 
 ## Reflecting on the exercise (10 pts) 
-The method we use to identify closures is in fact imperfect. For cases where hospitals rebranded, for example, there isn't actually a merger or closure occurring, but the data will suggest that the old name for the hosptial closed, essentially marking down a closure when there was just a rebranding. Similarly, hospitals may delay in reporting information about their active status due to simple human error. Furthermore, there are hospitals that may only temporarily be closed, and so adding them to the closure list is innaccurate given enough time. 
+(Partner 1) The method we use to identify closures is in fact imperfect. For cases where hospitals rebranded, for example, there isn't actually a merger or closure occurring, but the data will suggest that the old name for the hosptial closed, essentially marking down a closure when there was just a rebranding. Similarly, hospitals may delay in reporting information about their active status due to simple human error. Furthermore, there are hospitals that may only temporarily be closed, and so adding them to the closure list is innaccurate given enough time. 
 
 I think one of the best solutions we can employ is to analyze data over a longer period of time for more consistency. We may also consider writing contingencies that allow us to find hospitals that have rebranded. For example, if a hospital has location and provider information identical to a previously closed hospital, perhaps there are times where this is more accurate to flag as a rebrand rather than a merger. It may be useful to cross-reference our data with our databases that track whether a hospital can rebrand or whether their closure is temporary or permanent.
 
