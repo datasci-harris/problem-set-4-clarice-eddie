@@ -37,7 +37,6 @@ policy." **CT** **EA**
 5. Late coins used this pset: \*\*\3\*\* Late coins left after submission: \*\*\1\*\*
 ## Download and explore the Provider of Services (POS) file (10 pts)
 
-
 ```{python}
 import pandas as pd
 import os
@@ -185,8 +184,8 @@ from vega_datasets import data as vega_data
 import warnings 
 warnings.filterwarnings('ignore')
 
-folder_path = r'C:\Users\eddie\Downloads\pos_6789 (2).csv'
-# path for clarice: 'C:/Users/clari/OneDrive/Documents/Python II/pos_files/pos_6789.csv'
+folder_path = r'C:/Users/clari/OneDrive/Documents/Python II/pos_files/pos_6789.csv'
+# path for eddie: 'C:\Users\eddie\Downloads\pos_6789 (2).csv'
 
 df = pd.read_csv(folder_path)
 ```
@@ -194,7 +193,6 @@ df = pd.read_csv(folder_path)
 2.1
 
 Checking columns to verify
-
 ```{python}
 # Get a list of all column names
 column_names = df.columns.tolist()
@@ -403,7 +401,6 @@ plt.show()
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
 4.1
-
 ```{python}
 import time
 
@@ -413,7 +410,8 @@ zips_all_centroids['geometry'] = zip_restrict.centroid
 
 # Check the CRS and convert if necessary
 print(zips_all_centroids.crs)  # Check current CRS
-zips_all_centroids = zips_all_centroids.to_crs(epsg=3857)  # Convert to projected CRS (e.g., EPSG:3857)
+# Convert to projected CRS (e.g., EPSG:3857)
+zips_all_centroids = zips_all_centroids.to_crs(epsg=3857)
 
 # Reset the index to ensure it's unique
 zips_all_centroids = zips_all_centroids.reset_index(drop=True)
@@ -421,7 +419,6 @@ zips_all_centroids = zips_all_centroids.reset_index(drop=True)
 # Print first few rows and dimensions
 print(zips_all_centroids.head())
 print(f'The GeoDataFrame dimensions are {zips_all_centroids.shape}')
-
 ```
 
 Based on the xml file, the columns mean this:
@@ -443,7 +440,6 @@ ZIP: I have a duplicate of the ZCTA5 field, which I added for convenience or com
 centroid: This column contains the calculated centroid (center point) of each ZIP code area. It's a Point geometry representing the geographic center of the ZIP code polygon.
 
 4.2
-
 ```{python}
 # Filter Texas zip codes
 texas_zip_prefixes = ['75', '76', '77', '78', '79', '733', '885']
@@ -458,7 +454,6 @@ print(f"Number of unique zip codes in Texas and bordering states: {zips_texas_bo
 ```
 
 4.3
-
 ```{python}
 # Prepare hospital data
 pos_2016_df['ZIP_CD'] = pos_2016_df['ZIP_CD'].fillna(0).astype(int).astype(str)
@@ -484,7 +479,6 @@ The resulting GeoDataFrame (zips_withhospital_centroids) contains information ab
 including their centroids and how many hospitals they had in 2016.
 
 4.4 a
-
 ```{python}
 
 # Calculate distance to nearest hospital
@@ -502,7 +496,7 @@ print(zips_texas_subset['nearest_hospital_dist'].isna().sum())
 
 ```
 
-The amount of time changes, but I get around .17-.25 seconds to run 10 zip codes.
+The amount of time changes, but I get around .01 seconds to run 10 zip codes.
 
 4.4 b
 ```{python}
@@ -526,8 +520,8 @@ print(zips_texas_centroids['nearest_hospital_dist'].isna().sum())
 
 ```
 
-For me, the full calculation took 33.18 seconds, much longer than just doing 10 zip codes. 
-It's around 132.72 times longer.
+For me, the full calculation took .63-.68 seconds, much longer than just doing 10 zip codes. It's around 60 times longer.
+
 
 c. This is what's in the prj file
     GEOGCS["GCS_North_American_1983",
@@ -541,8 +535,7 @@ One degree of latitude is roughly equivalent to 69 miles.
 
 a. The distances are in degrees.
 
-b
-
+b.
 ```{python}
 
 # Calculate distance to hospital in miles
@@ -555,13 +548,11 @@ if nan_distances > 0:
 
 # Display the distances to the console
 print(zips_texas_centroids[['ZIP', 'distance_to_hospital_miles']])
-
 ```
 
 This value makes sense. Although the values are by default in scientific notation, it is still a lot more intuitive to thing of distances in miles rather than 'degrees', a measurement rarely if ever used day-to-day when we think about moving from point A to B.
 
 c
-
 ```{python}
 
 # Plotting the average distance to nearest hospital by ZIP code
@@ -575,10 +566,245 @@ plt.show()
 ```
 
 ## Effects of closures on access in Texas (15 pts)
-
 1. 
-2. 
-3. 
-4. 
+```{python}
+# Define Texas ZIP code prefixes
+zip_texas_prefixes = ['75', '76', '77', '78', '79', '733', '885']
+
+# Filter for closures in Texas between 2016-2019 based on ZIP code prefixes
+texas_closures_2016_2019 = confirmed_closures_df[
+    (confirmed_closures_df['ZIP_CD'].astype(str).str.startswith(tuple(zip_texas_prefixes))) &
+    (confirmed_closures_df['Suspected Closure Year'] >= 2016) &
+    (confirmed_closures_df['Suspected Closure Year'] <= 2019)
+]
+
+# Count closures by ZIP code
+closures_by_zip = texas_closures_2016_2019['ZIP_CD'].value_counts(
+).reset_index()
+closures_by_zip.columns = ['ZIP_CD', 'Number of Closures']
+
+# Display the table
+print("Number of Hospital Closures by ZIP Code in Texas (2016-2019):")
+print(closures_by_zip.to_string(index=False))
+
+# Get the list of directly affected ZIP codes
+affected_zip_codes = closures_by_zip['ZIP_CD'].tolist()
+
+print(f"\nDirectly affected ZIP codes: {affected_zip_codes}")
+print(f"Total number of affected ZIP codes: {len(affected_zip_codes)}")
+
+# Calculate total number of closures
+total_closures = closures_by_zip['Number of Closures'].sum()
+print(f"Total number of hospital closures: {total_closures}")
+```
+
+2.
+```{python}
+# Define Texas ZIP code prefixes (already defined in your previous code)
+zip_texas_prefixes = ['75', '76', '77', '78', '79', '733', '885']
+
+# Filter for Texas ZIP codes based on their prefixes (reuse zip_restrict)
+zip_restrict['ZIP'] = zip_restrict['ZCTA5'].astype(str)
+zip_texas = zip_restrict[zip_restrict['ZIP'].str.startswith(
+    tuple(zip_texas_prefixes))]
+
+# Ensure closures_by_zip has consistent formatting (convert to string and remove decimal points)
+closures_by_zip['ZIP_CD'] = closures_by_zip['ZIP_CD'].fillna(
+    0).astype(int).astype(str)
+
+# Debugging: Print sample data from both datasets to check for matching ZIP codes
+print("Sample of closures_by_zip:")
+print(closures_by_zip.head())
+
+print("\nSample of zip_texas:")
+print(zip_texas[['ZCTA5', 'ZIP']].head())
+
+# Merge the closure data with the shapefile data for Texas ZIP codes
+zip_texas_closure_map = zip_texas.merge(
+    closures_by_zip, left_on='ZIP', right_on='ZIP_CD', how='left')
+
+# Fill NaN values in 'Number of Closures' with 0 (for ZIPs with no closures)
+zip_texas_closure_map['Number of Closures'] = zip_texas_closure_map['Number of Closures'].fillna(
+    0)
+
+# Debugging: Check if any closures were found after merging
+print("\nSample of merged data (after filling NaNs):")
+print(zip_texas_closure_map[['ZIP', 'Number of Closures']].head())
+```
+
+```{python}
+# Plot a choropleth map of the number of closures by ZIP code in Texas
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+zip_texas_closure_map.plot(column='Number of Closures', cmap='Blues',
+                           linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
+
+plt.title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=15)
+plt.axis('off')  # Turn off axis
+
+plt.show()
+
+# Count how many unique ZIP codes were directly affected by at least one closure
+affected_zip_codes_count = zip_texas_closure_map[zip_texas_closure_map['Number of Closures'] > 0]['ZIP'].nunique(
+)
+print(
+    f"Total number of directly affected ZIP codes in Texas: {affected_zip_codes_count}")
+```
+
+3.
+```{python}
+directly_affected_zip_gdf = zip_texas_closure_map[zip_texas_closure_map['Number of Closures'] > 0]
+```
+
+```{python}
+# Adding uffer
+buffered_zips = directly_affected_zip_gdf.copy()
+buffered_zips['geometry'] = buffered_zips.geometry.buffer(16093.4)
+```
+
+```{python}
+# Merging
+buffered_zips_minimal = buffered_zips[['ZIP', 'geometry']]
+indirectly_affected_zip_gdf = gpd.sjoin(
+    zip_texas,
+    buffered_zips_minimal,
+    how='inner',
+    predicate='intersects'
+)
+
+# Remove ZIP codes that were directly affected
+indirectly_affected_zip_gdf = indirectly_affected_zip_gdf[
+    ~indirectly_affected_zip_gdf['ZCTA5'].isin(
+        directly_affected_zip_gdf['ZIP'])
+]
+
+# Count the number of indirectly affected ZIP codes
+num_indirectly_affected_zips = indirectly_affected_zip_gdf['ZCTA5'].nunique()
+print(
+    f"Number of indirectly affected ZIP codes: {num_indirectly_affected_zips}")
+
+# Display the first few rows of the result to verify
+print(indirectly_affected_zip_gdf[['ZCTA5']].head())
+
+# Create a list of unique indirectly affected ZIP codes
+indirectly_affected_zip_list = indirectly_affected_zip_gdf['ZCTA5'].unique(
+).tolist()
+print(f"List of indirectly affected ZIP codes: {indirectly_affected_zip_list}")
+```
+
+```{python}
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
+```
+
+```{python}
+# 1. Define Texas ZIP code prefixes
+zip_texas_prefixes = ['75', '76', '77', '78', '79', '733', '885']
+
+# 2. Filter for closures in Texas between 2016-2019 based on ZIP code prefixes
+texas_closures_2016_2019 = confirmed_closures_df[
+    (confirmed_closures_df['ZIP_CD'].astype(str).str.startswith(tuple(zip_texas_prefixes))) &
+    (confirmed_closures_df['Suspected Closure Year'] >= 2016) &
+    (confirmed_closures_df['Suspected Closure Year'] <= 2019)
+]
+
+# 3. Count closures by ZIP code
+closures_by_zip = texas_closures_2016_2019['ZIP_CD'].value_counts(
+).reset_index()
+closures_by_zip.columns = ['ZIP_CD', 'Number of Closures']
+
+# 4. Ensure closures_by_zip ZIP code column is string formatted for consistency
+closures_by_zip['ZIP_CD'] = closures_by_zip['ZIP_CD'].fillna(
+    0).astype(int).astype(str)
+
+# 5. Filter Texas ZIP codes based on prefixes and ensure they are strings
+zip_restrict['ZIP'] = zip_restrict['ZCTA5'].astype(str)
+zip_texas = zip_restrict[zip_restrict['ZIP'].str.startswith(
+    tuple(zip_texas_prefixes))]
+
+# 6. Merge closure data with Texas ZIP codes
+zip_texas_closure_map = zip_texas.merge(
+    closures_by_zip, left_on='ZIP', right_on='ZIP_CD', how='left'
+)
+
+# 7. Fill NaN values in 'Number of Closures' with 0 for ZIPs with no closures
+zip_texas_closure_map['Number of Closures'] = zip_texas_closure_map['Number of Closures'].fillna(
+    0)
+
+# 8. Convert to a projected CRS (meters) if necessary, and add a buffer
+zip_texas_closure_map = zip_texas_closure_map.to_crs(epsg=3857)
+buffered_zips = zip_texas_closure_map[zip_texas_closure_map['Number of Closures'] > 0].copy(
+)
+buffered_zips['geometry'] = buffered_zips.geometry.buffer(
+    16093.4)  # 10-mile buffer
+
+# 9. Keep only the ZIP and geometry columns for the spatial join
+buffered_zips_minimal = buffered_zips[['ZIP', 'geometry']]
+
+# 10. Reproject the original Texas ZIP data to match CRS
+zip_texas = zip_texas.to_crs(epsg=3857)
+
+# 11. Spatial join to find indirectly affected ZIP codes within the buffer
+indirectly_affected_zip_gdf = gpd.sjoin(
+    zip_texas,
+    buffered_zips_minimal,
+    how='inner',
+    predicate='intersects'
+)
+
+# 12. Remove ZIP codes that were directly affected
+indirectly_affected_zip_gdf = indirectly_affected_zip_gdf[
+    ~indirectly_affected_zip_gdf['ZCTA5'].isin(buffered_zips['ZIP'])
+]
+
+# 13. Add category columns for directly and indirectly affected ZIPs
+zip_texas_closure_map['Affected_Category'] = 'Not Affected'
+zip_texas_closure_map.loc[zip_texas_closure_map['Number of Closures']
+                          > 0, 'Affected_Category'] = 'Directly Affected'
+indirectly_affected_zips = indirectly_affected_zip_gdf['ZCTA5'].unique()
+zip_texas_closure_map.loc[
+    zip_texas_closure_map['ZIP'].isin(indirectly_affected_zips),
+    'Affected_Category'
+] = 'Indirectly Affected'
+
+# 14. Create a color map for the categories
+# Not Affected, Indirectly Affected, Directly Affected
+colors = ['#E6E6E6', '#FFA500', '#FF0000']
+cmap = ListedColormap(colors)
+
+# 15. Map categories to integer codes for plotting
+zip_texas_closure_map['Category_Code'] = zip_texas_closure_map['Affected_Category'].map({
+    'Not Affected': 0,
+    'Indirectly Affected': 1,
+    'Directly Affected': 2
+})
+
+# 16. Plot the data
+fig, ax = plt.subplots(1, 1, figsize=(15, 15))
+zip_texas_closure_map.plot(column='Category_Code', cmap=cmap, linewidth=0.8,
+                           edgecolor='0.8', ax=ax, legend=True)
+
+# Customize the legend
+legend_elements = [
+    Patch(facecolor='#E6E6E6', edgecolor='black', label='Not Affected'),
+    Patch(facecolor='#FFA500', edgecolor='black', label='Indirectly Affected'),
+    Patch(facecolor='#FF0000', edgecolor='black', label='Directly Affected')
+]
+ax.legend(handles=legend_elements,
+          title='Affected Categories', loc='lower right')
+
+# Add title and remove axis
+plt.title('Texas ZIP Codes Affected by Hospital Closures (2016-2019)', fontsize=16)
+plt.axis('off')
+plt.show()
+
+# Summary statistics
+print("Summary of Affected ZIP Codes:")
+print(zip_texas_closure_map['Affected_Category'].value_counts())
+
+```
 
 ## Reflecting on the exercise (10 pts) 
+The method we use to identify closures is in fact imperfect. For cases where hospitals rebranded, for example, there isn't actually a merger or closure occurring, but the data will suggest that the old name for the hosptial closed, essentially marking down a closure when there was just a rebranding. Similarly, hospitals may delay in reporting information about their active status due to simple human error. Furthermore, there are hospitals that may only temporarily be closed, and so adding them to the closure list is innaccurate given enough time. 
+
+I think one of the best solutions we can employ is to analyze data over a longer period of time for more consistency. We may also consider writing contingencies that allow us to find hospitals that have rebranded. For example, if a hospital has location and provider information identical to a previously closed hospital, perhaps there are times where this is more accurate to flag as a rebrand rather than a merger. It may be useful to cross-reference our data with our databases that track whether a hospital can rebrand or whether their closure is temporary or permanent.
