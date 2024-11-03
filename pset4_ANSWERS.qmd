@@ -79,6 +79,7 @@ https://www.aha.org/system/files/2018-02/2018-aha-hospital-fast-facts_0.pdf
 ```{python}
 # Define the path to your folder containing the POS files
 folder_path = r'C:/Users/clari/OneDrive/Documents/Python II/pos_files'
+# path for eddie: r'C:\Users\eddie\Downloads\pos2016.csv'
 
 # List all files in the directory to check if they exist
 print("Files in directory:")
@@ -86,8 +87,6 @@ for file in os.listdir(folder_path):
     print(file)
 
 # Define a function to load CSV files with different encodings and filter for short-term hospitals
-
-
 def load_and_filter_csv(file_name, encodings, year):
     for encoding in encodings:
         try:
@@ -177,8 +176,6 @@ plt.show()
     b.Both plots (total vs. unique hospitals) give the same result. This strongly suggests that the  dataset is clean and well-structured, with no duplicate entries for hospitals based on their CMS certification numbers (PRVDR_NUM). Each hospital appears only once per year, which means I can confidently proceed with further analysis without worrying about duplicate data affecting your results.
 
 ## Identify hospital closures in POS file (15 pts) (*)
-
-
 ```{python}
 import pandas as pd
 import altair as alt
@@ -189,6 +186,8 @@ import warnings
 warnings.filterwarnings('ignore')
 
 folder_path = r'C:\Users\eddie\Downloads\pos_6789 (2).csv'
+# path for clarice: 'C:/Users/clari/OneDrive/Documents/Python II/pos_files/pos_6789.csv'
+
 df = pd.read_csv(folder_path)
 ```
 
@@ -197,23 +196,15 @@ df = pd.read_csv(folder_path)
 Checking columns to verify
 
 ```{python}
-
-import pandas as pd
-
-
 # Get a list of all column names
 column_names = df.columns.tolist()
 
 # Print the list of column names
 print(column_names)
-
-
 ```
 
 
 ```{python}
-import pandas as pd
-
 # Step 1: Filter hospitals active in 2016
 active_2016 = df[(df['Year'] == 2016) & (df['PGM_TRMNTN_CD'] == 0)]
 
@@ -226,16 +217,16 @@ for _, row in active_2016.iterrows():
     facility_name = row['FAC_NAME']
     zip_code = row['ZIP_CD']
     suspected_closure_year = None
-    
+
     # Check each year from 2017 to 2019
     for year in range(2017, 2020):
         record = df[(df['Year'] == year) & (df['PRVDR_NUM'] == prvd_num)]
-        
+
         # Check if hospital is not active or missing
         if record.empty or record.iloc[0]['PGM_TRMNTN_CD'] != 0:
             suspected_closure_year = year
             break
-    
+
     # If closure year was found, add it to the list
     if suspected_closure_year:
         closures.append({
@@ -262,17 +253,15 @@ sorted_closures_df = closures_df.sort_values(by='Facility Name').head(10)
 
 # Display the Facility Name and Suspected Closure Year for the first 10 rows
 print(sorted_closures_df[['Facility Name', 'Suspected Closure Year']])
-
-
 ```
 
 2.3 - i
 
 (After running into errors setting up the for loop, ChatGPT was used for clean-up and debugging)
-
 ```{python}
-# Step 1: Calculate the number of active hospitals per zip code and year
-active_counts = df[df['PGM_TRMNTN_CD'] == 0].groupby(['ZIP_CD', 'Year']).size().reset_index(name='Active Hospital Count')
+# Step 1: Calculate number of active hospitals per zip code and year
+active_counts = df[df['PGM_TRMNTN_CD'] == 0].groupby(
+    ['ZIP_CD', 'Year']).size().reset_index(name='Active Hospital Count')
 
 # Step 2: Create empty lists for mergers and closures.
 potential_mergers = []
@@ -282,18 +271,20 @@ confirmed_closures = []
 for _, closure in closures_df.iterrows():
     zip_code = closure['ZIP_CD']
     closure_year = closure['Suspected Closure Year']
-    
+
     # Get active counts for the zip code in the closure year and the following year
-    active_current_year = active_counts[(active_counts['ZIP_CD'] == zip_code) & (active_counts['Year'] == closure_year)]
-    active_next_year = active_counts[(active_counts['ZIP_CD'] == zip_code) & (active_counts['Year'] == closure_year + 1)]
-    
+    active_current_year = active_counts[(active_counts['ZIP_CD'] == zip_code) & (
+        active_counts['Year'] == closure_year)]
+    active_next_year = active_counts[(active_counts['ZIP_CD'] == zip_code) & (
+        active_counts['Year'] == closure_year + 1)]
+
     # Check if there is an increase in hospital counts from one year to next
     if not active_current_year.empty and not active_next_year.empty:
         if active_next_year.iloc[0]['Active Hospital Count'] >= active_current_year.iloc[0]['Active Hospital Count']:
             # Potential merger if active hospital count is stable or increases
             potential_mergers.append(closure)
-            continue 
-    
+            continue
+
     # Otherwise, it's a confirmed closure
     confirmed_closures.append(closure)
 
@@ -311,21 +302,103 @@ confirmed_closures_df.head()
 We identify 27 potential mergers, based on an increase / stabilization of hospital amounts per zip code from one year to the next. By subtracting this from our previous closure total of 174, we get 174-27 = 147, our confirmed closures after accounting for these mergers.
 
 2.3 - ii
-
 ```{python}
 # Sort confirmed closures by Facility Name and select the first 10 rows
-sorted_confirmed_closures_df = confirmed_closures_df.sort_values(by='Facility Name').head(10)
+sorted_confirmed_closures_df = confirmed_closures_df.sort_values(
+    by='Facility Name').head(10)
 
 # Display the Facility Name and Suspected Closure Year for the first 10 rows
-print(sorted_confirmed_closures_df[['Facility Name', 'ZIP_CD', 'Suspected Closure Year']])
+print(sorted_confirmed_closures_df[[
+      'Facility Name', 'ZIP_CD', 'Suspected Closure Year']])
 ```
 
 ## Download Census zip code shapefile (10 pt) 
-
 1. 
-    a.
-    b. 
+    a. 
+    .shp (Shapefile): This is the main file that contains the geometric data (points, lines, polygons) that represent the shapes of the geographic features.  It is 817, 915 KB
+    .shx (Shape Index File): This  contains an index of the geometry in the .shp file, allowing for quick access to the geometric features. It is 259 KB.
+    .dbf (Database File): This contains attribute data for each shape in the .shp file. It is stored in a tabular format (each row corresponds to a shape, and columns contain attributes like names, IDs, or other relevant information).It is 6,275 KB.
+    .prj (Projection File): This file contains information about the coordinate system and map projection used by the shapefile. It ensures that the geographic data can be accurately placed on a map. It is 1 KB
+    .xml(Extensible Markup Language) It's used to describe data and store data in a shareable manner. XML supports information exchange between computer systems such as websites, databases, and third-party applications.It is 16 KB.
+
 2. 
+```{python}
+shapefile_path = r'C:\Users\clari\OneDrive\Documents\Python II\gz_2010_us_860_00_500k\gz_2010_us_860_00_500k.shp'
+zip_restrict = gpd.read_file(shapefile_path)
+
+# Filter for Texas ZIP codes (starting with 75, 76, 77, 78, 79, 733, or 885)
+zip_texas_prefixes = ['75', '76', '77', '78', '79', '733', '885']
+zip_restrict['ZIP'] = zip_restrict['ZCTA5'].astype(str)
+
+# Filter for Texas ZIP codes based on their prefixes
+zip_texas = zip_restrict[zip_restrict['ZIP'].str.startswith(
+    tuple(zip_texas_prefixes))]
+
+# Load the cleaned POS data for 2016
+pos_2016_df = pd.read_csv(
+    r'C:/Users/clari/OneDrive/Documents/Python II/pos_files/pos2016.csv')
+pos_2016_df = pos_2016_df[(pos_2016_df['PRVDR_CTGRY_CD'] == 1) & (
+    pos_2016_df['PRVDR_CTGRY_SBTYP_CD'] == 1)]
+print(len(pos_2016_df))
+
+# Convert floating-point ZIP codes to integers and then to strings (remove decimal points)
+pos_2016_df['ZIP_CD'] = pos_2016_df['ZIP_CD'].fillna(0).astype(int).astype(str)
+
+# Group by ZIP code and count the number of unique hospitals (unique CMS certification numbers) per ZIP code
+hospitals_per_zip = pos_2016_df.groupby(
+    'ZIP_CD')['PRVDR_NUM'].nunique().reset_index()
+hospitals_per_zip.columns = ['ZIP_CD', 'num_hospitals']
+
+# Ensure both DataFrames have consistent ZIP code formatting (string)
+hospitals_per_zip['ZIP'] = hospitals_per_zip['ZIP_CD'].astype(str)
+zip_texas['ZIP'] = zip_texas['ZIP'].astype(str)
+
+# Debugging: Check if there are matching ZIP codes between the two DataFrames
+matching_zips = set(zip_texas['ZIP']).intersection(
+    set(hospitals_per_zip['ZIP']))
+print(f"Number of matching ZIP codes: {len(matching_zips)}")
+if len(matching_zips) == 0:
+    print("No matching ZIP codes found between zip_texas and hospitals_per_zip.")
+
+# Perform the merge without duplicating columns
+zip_texas = zip_texas.merge(
+    hospitals_per_zip[['ZIP', 'num_hospitals']], on='ZIP', how='left')
+
+# Fill NaN values (for areas without hospitals) with 0
+zip_texas['num_hospitals'] = zip_texas['num_hospitals'].fillna(
+    0).astype(int).astype('category')
+```
+
+```{python}
+# Convert the 'num_hospitals' column to integer type
+zip_texas_count = zip_texas.copy()
+zip_texas_count['num_hospitals'] = zip_texas['num_hospitals'].astype(int)
+# Sort the DataFrame by number of hospitals in descending order
+zip_texas_sorted = zip_texas_count.sort_values(
+    'num_hospitals', ascending=False)
+
+# Print ZIP codes and number of hospitals
+print("ZIP Code | Number of Hospitals")
+print("-" * 30)
+for _, row in zip_texas_count.iterrows():
+    if row['num_hospitals'] > 0:
+        print(f"{row['ZIP']:7} | {row['num_hospitals']}")
+
+# Calculate and print total number of hospitals
+total_hospitals = zip_texas_count['num_hospitals'].sum()
+print(f"\nTotal number of hospitals in Texas: {total_hospitals}")
+```
+
+```{python}
+# Plot a choropleth map of the number of hospitals by ZIP code in Texas
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+zip_texas.plot(column='num_hospitals', linewidth=0.8,
+               ax=ax, edgecolor='0.8', legend=True)
+
+plt.title('Number of Hospitals by ZIP Code in Texas (2016)', fontsize=15)
+plt.axis('off')
+plt.show()
+```
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
