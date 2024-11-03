@@ -402,17 +402,178 @@ plt.show()
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
-1. 
-2. 
-3. 
-4. 
-    a.
-    b.
-5. 
-    a.
-    b.
-    c.
-    
+4.1
+
+```{python}
+import time
+
+# Create a new GeoDataFrame with centroids
+zips_all_centroids = zip_restrict.copy()
+zips_all_centroids['geometry'] = zip_restrict.centroid
+
+# Check the CRS and convert if necessary
+print(zips_all_centroids.crs)  # Check current CRS
+zips_all_centroids = zips_all_centroids.to_crs(epsg=3857)  # Convert to projected CRS (e.g., EPSG:3857)
+
+# Reset the index to ensure it's unique
+zips_all_centroids = zips_all_centroids.reset_index(drop=True)
+
+# Print first few rows and dimensions
+print(zips_all_centroids.head())
+print(f'The GeoDataFrame dimensions are {zips_all_centroids.shape}')
+
+```
+
+Based on the xml file, the columns mean this:
+
+GEO_ID: This is a unique identifier for each geographic entity. It's an alphanumeric field that can be used to join these spatial tables to other 2010 Census data tables.
+
+ZCTA5: This stands for ZIP Code Tabulation Area (5-digit). It's a 5-digit Census code representing the ZIP code area.
+
+NAME: This field contains the name of the geographic entity without the translated Legal/Statistical Area Description (LSAD). It's an alphanumeric field.
+
+LSAD: This stands for Legal/Statistical Area Description. It's a standard abbreviation used on census maps, represented as an alpha (text) field.
+
+CENSUSAREA: This represents the area of the entity before generalization, measured in square miles. It's a numeric field derived from the ungeneralized area of each entity and can be used for density calculations.
+
+geometry: This column contains the geometric information for each ZIP code area. In the original shapefile, this would be a polygon representing the boundaries of the ZIP code area.
+
+ZIP: I have a duplicate of the ZCTA5 field, which I added for convenience or compatibility with other datasets.
+
+centroid: This column contains the calculated centroid (center point) of each ZIP code area. It's a Point geometry representing the geographic center of the ZIP code polygon.
+
+4.2
+
+```{python}
+# Filter Texas zip codes
+texas_zip_prefixes = ['75', '76', '77', '78', '79', '733', '885']
+zips_texas_centroids = zips_all_centroids[zips_all_centroids['ZIP'].str.startswith(tuple(texas_zip_prefixes))]
+print(f"Number of unique zip codes in Texas: {zips_texas_centroids['ZIP'].nunique()}")
+
+# Define and filter for bordering states' ZIP codes
+border_states_zip_prefixes = texas_zip_prefixes + ['73', '72', '71', '68', '69']
+zips_texas_borderstates_centroids = zips_all_centroids[zips_all_centroids['ZIP'].str.startswith(tuple(border_states_zip_prefixes))]
+print(f"Number of unique zip codes in Texas and bordering states: {zips_texas_borderstates_centroids['ZIP'].nunique()}")
+
+```
+
+4.3
+
+```{python}
+# Prepare hospital data
+pos_2016_df['ZIP_CD'] = pos_2016_df['ZIP_CD'].fillna(0).astype(int).astype(str)
+hospitals_per_zip = pos_2016_df.groupby('ZIP_CD')['PRVDR_NUM'].nunique().reset_index()
+hospitals_per_zip.columns = ['ZIP', 'num_hospitals']
+
+# Ensure both DataFrames have consistent ZIP code formatting (string)
+hospitals_per_zip['ZIP'] = hospitals_per_zip['ZIP'].astype(str)
+zips_texas_borderstates_centroids['ZIP'] = zips_texas_borderstates_centroids['ZIP'].astype(str)
+
+# Merge to find zip codes with hospitals
+zips_withhospital_centroids = zips_texas_borderstates_centroids.merge(
+    hospitals_per_zip[['ZIP', 'num_hospitals']], on='ZIP', how='inner'
+)
+print(f"Dimensions of zips_withhospital_centroids: {zips_withhospital_centroids.shape}")
+print(zips_withhospital_centroids.head())
+
+```
+
+We performed an inner merge on the ZIP column to create a subset of zips_texas_borderstates_centroids that contains only 
+those ZIP codes with at least one hospital in 2016. 
+The resulting GeoDataFrame (zips_withhospital_centroids) contains information about these ZIP codes, 
+including their centroids and how many hospitals they had in 2016.
+
+4.4 a
+
+```{python}
+
+# Calculate distance to nearest hospital
+zips_texas_subset = zips_texas_centroids.head(10)
+start_time = time.time()
+zips_texas_subset['nearest_hospital_dist'] = zips_texas_subset.geometry.apply(
+    lambda x: zips_withhospital_centroids.distance(x).min()
+)
+end_time = time.time()
+print(zips_texas_subset[['ZIP', 'nearest_hospital_dist']])
+print(f"Time taken for 10 ZIP codes: {end_time - start_time:.2f} seconds")
+
+# Check for NaN distances
+print(zips_texas_subset['nearest_hospital_dist'].isna().sum())
+
+```
+
+The amount of time changes, but I get around .17-.25 seconds to run 10 zip codes.
+
+4.4 b
+```{python}
+# Start timing the full computation
+start_time_full = time.time()
+
+# Calculate distances from each ZIP code in zips_texas_centroids to the nearest ZIP code with a hospital
+zips_texas_centroids['nearest_hospital_dist'] = zips_texas_centroids.geometry.apply(
+    lambda x: zips_withhospital_centroids.distance(x).min()
+)
+
+# End timing
+end_time_full = time.time()
+
+# Display results and time taken
+print(zips_texas_centroids[['ZIP', 'nearest_hospital_dist']])
+print(f"Time taken for full calculation: {end_time_full - start_time_full:.2f} seconds")
+
+# Check for NaN distances
+print(zips_texas_centroids['nearest_hospital_dist'].isna().sum())
+
+```
+
+For me, the full calculation took 33.18 seconds, much longer than just doing 10 zip codes. 
+It's around 132.72 times longer.
+
+c. This is what's in the prj file
+    GEOGCS["GCS_North_American_1983",
+    DATUM["D_North_American_1983",
+    SPHEROID["GRS_1980",6378137,298.257222101]],
+    PRIMEM["Greenwich",0],
+    UNIT["Degree",0.017453292519943295]]
+One degree of latitude is roughly equivalent to 69 miles.
+
+4.5
+
+a. The distances are in degrees.
+
+b
+
+```{python}
+
+# Calculate distance to hospital in miles
+zips_texas_centroids['distance_to_hospital_miles'] = zips_texas_centroids['nearest_hospital_dist'] * 69
+
+# Check for NaN values in the distance column
+nan_distances = zips_texas_centroids['distance_to_hospital_miles'].isna().sum()
+if nan_distances > 0:
+    print(f"Warning: There are {nan_distances} NaN values in 'distance_to_hospital_miles'.")
+
+# Display the distances to the console
+print(zips_texas_centroids[['ZIP', 'distance_to_hospital_miles']])
+
+```
+
+This value makes sense. Although the values are by default in scientific notation, it is still a lot more intuitive to thing of distances in miles rather than 'degrees', a measurement rarely if ever used day-to-day when we think about moving from point A to B.
+
+c
+
+```{python}
+
+# Plotting the average distance to nearest hospital by ZIP code
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+zips_texas_centroids.plot(column='distance_to_hospital_miles',
+                          linewidth=0.8, ax=ax, edgecolor='0.8', legend=True)
+
+plt.title('Average Distance to Nearest Hospital by ZIP Code (Miles)', fontsize=15)
+plt.axis('off')  # Turn off axis
+plt.show()
+```
+
 ## Effects of closures on access in Texas (15 pts)
 
 1. 
