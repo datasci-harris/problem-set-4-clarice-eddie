@@ -4,9 +4,9 @@ format:
   pdf:
     keep-tex: true
     include-in-header: 
-       text: |
-         \usepackage{fvextra}
-         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+      text: |
+        \usepackage{fvextra}
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,breakanywhere,commandchars=\\\{\}}
 include-before-body:
   text: |
     \RecustomVerbatimEnvironment{verbatim}{Verbatim}{
@@ -23,18 +23,14 @@ We checked Googled commands/ways to go about getting the output needed. I have i
 
 1. "This submission is my work alone and complies with the 30538 integrity
 policy." **CT** **EA**
-2. "I have uploaded the names of anyone I worked with on the problem set **[here](https://docs.google.com/forms/d/1-zzHx762odGlpVWtgdIC55vqF-j3gqdAp6Pno1rIGK0/edit)**"  \*\*\_\_\*\* (1 point)
+2. "I have uploaded the names of anyone I worked with on the problem set **[here](https://docs.google.com/forms/d/1-zzHx762odGlpVWtgdIC55vqF-j3gqdAp6Pno1rIGK0/edit)**"  **CT** **EA** (1 point)
 3. Late coins used this pset: **3** Late coins left after submission: **1**
 
+- Partner 1 (cmtee):
+    - Partner 2 (eandujar):
 ## Style Points (10 pts)
 ## Submission Steps (10 pts)
-1. This problem set is a paired problem set.
-2. Play paper, scissors, rock to determine who goes first. Call that person *Partner 1*.
-    - Partner 1 (cmtee):
-    - Partner 2 (eandujar):
-3. "This submission is our work alone and complies with the 30538 integrity policy." Add your initials to indicate your agreement: \*\*\_\_\*\* \*\*\_\_\*\*
-4. "I have uploaded the names of anyone else other than my partner and I worked with on the problem set **[here](https://docs.google.com/forms/d/185usrCREQaUbvAXpWhChkjghdGgmAZXA3lPWpXLLsts/edit)**"  (1 point)
-5. Late coins used this pset: \*\*\3\*\* Late coins left after submission: \*\*\1\*\*
+    
 ## Download and explore the Provider of Services (POS) file (10 pts)
 
 ```{python}
@@ -373,9 +369,7 @@ zip_texas_count['num_hospitals'] = zip_texas['num_hospitals'].astype(int)
 zip_texas_sorted = zip_texas_count.sort_values(
     'num_hospitals', ascending=False)
 
-# Print ZIP codes and number of hospitals
-print("ZIP Code | Number of Hospitals")
-print("-" * 30)
+# ZIP codes and number of hospitals
 for _, row in zip_texas_count.iterrows():
     if row['num_hospitals'] > 0:
         print(f"{row['ZIP']:7} | {row['num_hospitals']}")
@@ -684,9 +678,14 @@ print(
 print(indirectly_affected_zip_gdf[['ZCTA5']].head())
 
 # Create a list of unique indirectly affected ZIP codes
-indirectly_affected_zip_list = indirectly_affected_zip_gdf['ZCTA5'].unique(
-).tolist()
-print(f"List of indirectly affected ZIP codes: {indirectly_affected_zip_list}")
+indirectly_affected_zip_list = indirectly_affected_zip_gdf['ZCTA5'].unique().tolist()
+
+# Limit the list to the first 20 ZIP codes (document crashes otherwise)
+limited_zip_list = indirectly_affected_zip_list[:20]
+
+# Print the limited list
+print(f"List of indirectly affected ZIP codes (first 20): {limited_zip_list}")
+
 ```
 
 ```{python}
